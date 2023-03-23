@@ -124,6 +124,7 @@ dependencies:
       - plotly==5.13.1
       - prometheus-client==0.16.0
       - protobuf==4.22.1
+      - pyarrow==11.0.0
       - pyasn1==0.4.8
       - pyasn1-modules==0.2.8
       - pycparser==2.21

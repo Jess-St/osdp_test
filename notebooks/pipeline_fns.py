@@ -2,6 +2,7 @@ from ElexonDataPortal import api
 from datetime import date, datetime, timedelta
 import pytz
 import pandas as pd
+import pyarrow
 import os
 
 
@@ -53,7 +54,7 @@ def setup_update_B1610_data(location_BMRS_B1610: str, num_days: int = 14, hist_d
     df_B1610 dataframe and updates only the missing recent data.
 
     Args:
-        location_BMRS_B1610 (str): location of the B1610 csv file
+        location_BMRS_B1610 (str): location of the B1610 parquet file
         num_days(int): max number of days for which to store the B1610 data. If the latest day in the B1610 dataset
                         is less recent than this timedelta, the function will simply request a new dataset.
         hist_days(int): maximum number of history days to keep.
@@ -69,12 +70,12 @@ def setup_update_B1610_data(location_BMRS_B1610: str, num_days: int = 14, hist_d
         date.today() - timedelta(days=5), utc=True
     )  # The most recent B1610 data is ca. 5 days old
 
-    if not os.path.isfile(os.path.join(location_BMRS_B1610, "B1610.csv")):
+    if not os.path.isfile(os.path.join(location_BMRS_B1610, "B1610.parquet")):
         df_B1610 = client.get_B1610(B1610_start_date, B1610_end_date)
         df_B1610 = df_B1610.rename(columns={"bMUnitID": "bmUnitID"})
 
     else:
-        df_B1610 = pd.read_csv(os.path.join(location_BMRS_B1610, "B1610.csv"), header=0, index_col=False)
+        df_B1610 = pd.read_parquet(os.path.join(location_BMRS_B1610, "B1610.parquet"))
         B1610_max_date = pd.to_datetime(df_B1610["settlementDate"], utc=True).max()
         B1610_update_start_date = pd.to_datetime(B1610_max_date + timedelta(days=1), utc=True)
 
@@ -91,11 +92,15 @@ def setup_update_B1610_data(location_BMRS_B1610: str, num_days: int = 14, hist_d
                 df_B1610_append = df_B1610_append.rename(columns={"bMUnitID": "bmUnitID"})
                 df_B1610 = pd.concat((df_B1610, df_B1610_append), axis=0)
 
-    df_B1610[["local_datetime", "settlementDate", "start", "end"]] = df_B1610[
-        ["local_datetime", "settlementDate", "start", "end"]
-    ].apply(pd.to_datetime, utc=True)
+    df_B1610 = df_B1610[["local_datetime", "settlementDate", "settlementPeriod", "bmUnitID", "quantity"]]
 
-    df_B1610.to_csv(os.path.join(location_BMRS_B1610, "B1610.csv"), index=False)
+    df_B1610[["local_datetime", "settlementDate"]] = df_B1610[["local_datetime", "settlementDate"]].apply(
+        pd.to_datetime, utc=True
+    )
+    df_B1610["settlementPeriod"] = df_B1610["settlementPeriod"].astype("int64")
+    df_B1610["quantity"] = df_B1610["quantity"].astype("float64")
+
+    df_B1610.to_parquet(os.path.join(location_BMRS_B1610, "B1610.parquet"))
 
     return df_B1610
 
@@ -113,19 +118,19 @@ def setup_update_PHYBM_data(BM_start_date: pd.Timestamp, location_BMRS_PHYBMDATA
     Args:
         BM_start_date (pd.Timestamp): Latest date in the B1610 dataframe plus one day.
                                         NB, the B1610 data always gets updated for entire days.
-        location_BMRS_PHYBMDATA (str): location of the PHYBMDATA csv file.
+        location_BMRS_PHYBMDATA (str): location of the PHYBMDATA parquet file.
 
     Returns:
         pd.DataFrame: dataframe with the updated Physical BM Data.
     """
     BM_end_date = datetime.combine(date.today(), datetime.min.time()) + timedelta(days=1)
 
-    if not os.path.isfile(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.csv")):
+    if not os.path.isfile(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.parquet")):
         df_PHYBMDATA = client.get_PHYBMDATA(BM_start_date, BM_end_date)
         df_PHYBMDATA = df_PHYBMDATA.loc[df_PHYBMDATA["recordType"].isin(["PN", "MEL", "BOALF"])]
 
     else:
-        df_PHYBMDATA = pd.read_csv(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.csv"), header=0, index_col=False)
+        df_PHYBMDATA = pd.read_parquet(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.parquet"))
         df_PHYBMDATA["settlementDate"] = pd.to_datetime(df_PHYBMDATA["settlementDate"]).dt.tz_localize(None)
 
         df_PHYBMDATA_start_date = (
@@ -149,11 +154,55 @@ def setup_update_PHYBM_data(BM_start_date: pd.Timestamp, location_BMRS_PHYBMDATA
 
         df_PHYBMDATA = df_PHYBMDATA.drop_duplicates(keep="last")
 
+    df_PHYBMDATA = df_PHYBMDATA[
+        [
+            "local_datetime",
+            "recordType",
+            "bmUnitID",
+            "settlementDate",
+            "settlementPeriod",
+            "timeFrom",
+            "pnLevelFrom",
+            "timeTo",
+            "pnLevelTo",
+            "melLevelFrom",
+            "melLevelTo",
+            "bidOfferAcceptanceNumber",
+            "acceptanceTime",
+            "bidOfferLevelFrom",
+            "bidOfferLevelTo",
+        ]
+    ]
+
     df_PHYBMDATA[["local_datetime", "settlementDate", "acceptanceTime", "timeFrom", "timeTo"]] = df_PHYBMDATA[
         ["local_datetime", "settlementDate", "acceptanceTime", "timeFrom", "timeTo"]
     ].apply(pd.to_datetime, utc=True)
+    df_PHYBMDATA["settlementPeriod"] = df_PHYBMDATA["settlementPeriod"].astype("int64")
+    df_PHYBMDATA[
+        [
+            "pnLevelFrom",
+            "pnLevelTo",
+            "melLevelFrom",
+            "melLevelTo",
+            "bidOfferAcceptanceNumber",
+            "bidOfferLevelFrom",
+            "bidOfferLevelTo",
+        ]
+    ] = df_PHYBMDATA[
+        [
+            "pnLevelFrom",
+            "pnLevelTo",
+            "melLevelFrom",
+            "melLevelTo",
+            "bidOfferAcceptanceNumber",
+            "bidOfferLevelFrom",
+            "bidOfferLevelTo",
+        ]
+    ].astype(
+        "float64"
+    )
 
-    df_PHYBMDATA.to_csv(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.csv"), index=False)
+    df_PHYBMDATA.to_parquet(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.parquet"))
 
     return df_PHYBMDATA
 
@@ -174,7 +223,6 @@ def filter_and_rename_physical_Data(df_PHYBMDATA: pd.DataFrame) -> pd.DataFrame:
         "local_datetime",
         "recordType",
         "bmUnitID",
-        "ngcBMUnitName",
         "settlementDate",
         "settlementPeriod",
         "timeFrom",
@@ -185,11 +233,6 @@ def filter_and_rename_physical_Data(df_PHYBMDATA: pd.DataFrame) -> pd.DataFrame:
     boal_columns = [
         "bidOfferAcceptanceNumber",
         "acceptanceTime",
-        "deemedBidOfferFlag",
-        "soFlag",
-        "storProviderFlag",
-        "rrInstructionFlag",
-        "rrScheduleFlag",
         "bidOfferLevelFrom",
         "bidOfferLevelTo",
     ]
