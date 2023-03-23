@@ -2,7 +2,7 @@ name: run Data_Pipeline.py
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
+    - cron: '*/10 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       - name: execute py script # run Data_Pipeline.py
         env:
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
-        run: python /notebooks/py_versions/Data_Pipeline.py
+        run: python notebooks/py_versions/Data_Pipeline.py
           
       - name: commit files
         run: |
