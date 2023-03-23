@@ -24,7 +24,7 @@ jobs:
           
       - name: execute py script # run Data_Pipeline.py
         env:
-          SOME_SECRET: ${{ secrets.SOME_SECRET }}
+          BMRS_API_KEY: ${{ secrets.BMRS_API_KEY }}
         run: python ${{ github.workspace }}/notebooks/py_versions/Data_Pipeline.py
           
       - name: commit files
