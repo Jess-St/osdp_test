@@ -25,7 +25,7 @@ jobs:
       - name: execute py script # run Data_Pipeline.py
         env:
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
-        run: python notebooks/py_versions/Data_Pipeline.py
+        run: python ${{ github.workspace }}/notebooks/py_versions/Data_Pipeline.py
           
       - name: commit files
         run: |

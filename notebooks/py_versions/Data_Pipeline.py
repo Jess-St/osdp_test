@@ -28,8 +28,8 @@ import warnings
 warnings.filterwarnings(action="ignore", category=UserWarning)
 
 # %%
-osdp_folder = os.environ.get("OSDP")
-osdp_folder
+# osdp_folder = os.environ.get("OSDP")
+# osdp_folder
 
 # %%
 # Specify which folder contains your local directory
@@ -39,7 +39,7 @@ osdp_folder
     location_BMRS_PHYBMDATA,
     location_BMRS_B1610,
     location_BMRS_Final,
-) = plfns.create_folder_structure(osdp_folder=osdp_folder)
+) = plfns.create_folder_structure(osdp_folder="${{ github.workspace }}")
 
 # %% [markdown]
 # ### Data Diff Querying / Change Data Capture (CDC)
