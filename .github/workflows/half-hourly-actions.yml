@@ -2,7 +2,7 @@ name: run Data_Pipeline.py
 
 on:
   schedule:
-    - cron: '0 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
+    - #cron: '0 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
 
 jobs:
   build:
