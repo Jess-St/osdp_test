@@ -14,7 +14,7 @@ client = api.Client(
 )  # Copy API key in here (scripting key on the elexonportal.co.uk website; requires setting up user account)
 
 
-def create_folder_structure(osdp_folder="${{ github.workspace }}"):
+def create_folder_structure(osdp_folder):
     """Creates the folder structure required to run the code
 
     Args:

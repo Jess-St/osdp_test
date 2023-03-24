@@ -1,7 +1,9 @@
 asttokens==2.2.1
 attrs==22.2.0
 backcall==0.2.0
+black==23.1.0
 charset-normalizer==3.1.0
+click==8.1.3
 colorama==0.4.6
 comm==0.1.3
 DateTime==5.1
@@ -22,12 +24,14 @@ markdown-it-py==2.2.0
 matplotlib-inline==0.1.6
 mdit-py-plugins==0.3.5
 mdurl==0.1.2
+mypy-extensions==1.0.0
 nbformat==5.8.0
 nest-asyncio==1.5.6
 numpy==1.24.2
 packaging==23.0
 pandas==1.5.3
 parso==0.8.3
+pathspec==0.11.1
 pickleshare==0.7.5
 platformdirs==3.1.1
 prompt-toolkit==3.0.38
@@ -38,7 +42,6 @@ Pygments==2.14.0
 pyrsistent==0.19.3
 python-dateutil==2.8.2
 pytz==2022.7.1
-#pywin32==305
 PyYAML==6.0
 pyzmq==25.0.2
 requests==2.28.2

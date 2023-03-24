@@ -2,7 +2,7 @@ name: run Data_Pipeline.py
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
+    - cron: '*/30 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
 
 jobs:
   build:
@@ -25,6 +25,7 @@ jobs:
       - name: execute py script # run Data_Pipeline.py
         env:
           BMRS_API_KEY: ${{ secrets.BMRS_API_KEY }}
+          OSDP: ${{ github.workspace }}
         run: python ${{ github.workspace }}/notebooks/py_versions/Data_Pipeline.py
           
       - name: commit files
