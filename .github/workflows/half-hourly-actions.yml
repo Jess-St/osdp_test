@@ -28,9 +28,6 @@ jobs:
           OSDP: ${{ github.workspace }}
         run: python ${{ github.workspace }}/notebooks/py_versions/Data_Pipeline.py
 
-      # - name: Saving changes to repo
-      #   uses: stefanzweifel/git-auto-commit-action@v4 
-
       - name: commit files
         run: |
           git config --local user.email "action@github.com"
@@ -42,4 +39,4 @@ jobs:
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main 
+          branch: main
