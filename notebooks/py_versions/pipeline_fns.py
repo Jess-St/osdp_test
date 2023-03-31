@@ -67,8 +67,8 @@ def setup_update_B1610_data(location_BMRS_B1610: str, num_days: int = 14, hist_d
         date.today() - timedelta(days=num_days), utc=True
     )  # Default to 14 days ago to speed up API query
     B1610_end_date = pd.to_datetime(
-        date.today() - timedelta(days=5), utc=True
-    )  # The most recent B1610 data is ca. 5 days old
+        date.today() - timedelta(days=6), utc=True
+    )  # The most recent B1610 data is ca. 6 days old
 
     if not os.path.isfile(os.path.join(location_BMRS_B1610, "B1610.parquet")):
         df_B1610 = client.get_B1610(B1610_start_date, B1610_end_date)
@@ -123,7 +123,9 @@ def setup_update_PHYBM_data(BM_start_date: pd.Timestamp, location_BMRS_PHYBMDATA
     Returns:
         pd.DataFrame: dataframe with the updated Physical BM Data.
     """
-    BM_end_date = datetime.combine(date.today(), datetime.min.time()) + timedelta(days=1)
+    BM_end_date = pd.to_datetime(datetime.now(pytz.timezone("Europe/London")) + timedelta(minutes=90)).replace(
+        tzinfo=None
+    )
 
     if not os.path.isfile(os.path.join(location_BMRS_PHYBMDATA, "PHYBMDATA.parquet")):
         df_PHYBMDATA = client.get_PHYBMDATA(BM_start_date, BM_end_date)
@@ -207,18 +209,50 @@ def setup_update_PHYBM_data(BM_start_date: pd.Timestamp, location_BMRS_PHYBMDATA
     return df_PHYBMDATA
 
 
-def filter_and_rename_physical_Data(df_PHYBMDATA: pd.DataFrame) -> pd.DataFrame:
+def filter_and_rename_physical_Data(
+    location_BMRS_Final: str, df_B1610: pd.DataFrame, df_PHYBMDATA: pd.DataFrame
+) -> pd.DataFrame:
     """
-    Filters the Physical BM data into the three record types that we're interested in:
-    FPN, MEL and BOAL. Selects the relevant columns in each dataset to reduce the size of each DF.
-    Renames the columns in the filtered DFs to follow a standard pattern.
+    If it exists, reads in the "Generation_Combined.csv" and filters this to the period between
+    the start of the BM data and the end of the Generation_Combined data (minus 90 minutes). NB:
+    90 minutes was chosen as the BM data might be updated slightly retrospectively after the pipeline
+    was last run as balancing actions can happen at any time throughout a settlement period.
+    Filters the Physical BM data so it only contains the most recent settlement periods and the three
+    record types that we're interested in: FPN, MEL and BOAL. Selects the relevant columns in each
+    dataset to reduce the size of each DF. Renames the columns in the filtered DFs to follow a
+    standard pattern.
 
     Args:
+        location_BMRS_Final (str): directory with the final combined live generation dataset.
+        df_PHYBMDATA (pd.DataFrame): B1610 dataframe created by the setup_update_B1610_data function.
         df_PHYBMDATA (pd.DataFrame): current version of the PHYBMDATA dataframe.
 
     Returns:
-        pd.DataFrame: Three dfs with the FPN, MEL and BOAL data respectively.
+        pd.DataFrame: The filtered version of the df_generation dataframe and three dfs with
+        the FPN, MEL and BOAL data respectively.
     """
+    if os.path.isfile(os.path.join(location_BMRS_Final, "Generation_Combined.csv")):
+        df_generation = pd.read_csv(
+            os.path.join(location_BMRS_Final, "Generation_Combined.csv"), header=0, index_col=None
+        )
+
+        df_generation[["localDateTime", "settlementDate"]] = df_generation[["localDateTime", "settlementDate"]].apply(
+            pd.to_datetime
+        )
+        df_generation["settlementPeriod"] = df_generation["settlementPeriod"].astype(int)
+
+        # Discard the last 3 settlement periods of the df_generation and filter it so it only includes data derived from the BM (not historic data)
+        df_generation_max_datetime = pd.to_datetime(df_generation["localDateTime"].max()) - timedelta(minutes=90)
+        df_generation = df_generation.loc[df_generation["localDateTime"] < df_generation_max_datetime]
+        df_generation = df_generation.loc[df_generation["localDateTime"] > df_B1610["local_datetime"].max()]
+        df_generation = df_generation[["localDateTime", "settlementDate", "settlementPeriod", "BMUnitID", "quantity"]]
+        df_generation = df_generation.rename(columns={"localDateTime": "local_datetime", "BMUnitID": "bmUnitID"})
+
+        df_PHYBMDATA = df_PHYBMDATA.loc[df_PHYBMDATA["local_datetime"] >= df_generation_max_datetime]
+
+    else:
+        df_generation = pd.DataFrame()
+
     common_columns = [
         "local_datetime",
         "recordType",
@@ -253,7 +287,7 @@ def filter_and_rename_physical_Data(df_PHYBMDATA: pd.DataFrame) -> pd.DataFrame:
         }
     ).set_index("bmUnitID")
 
-    return df_fpn, df_mel, df_boal
+    return df_generation, df_fpn, df_mel, df_boal
 
 
 def convert_physical_data_to_long(df: pd.DataFrame) -> pd.DataFrame:
