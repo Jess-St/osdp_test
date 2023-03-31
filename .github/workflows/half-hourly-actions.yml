@@ -7,7 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
 
       - name: checkout repo content
@@ -28,6 +27,16 @@ jobs:
           BMRS_API_KEY: ${{ secrets.BMRS_API_KEY }}
           OSDP: ${{ github.workspace }}
         run: python ${{ github.workspace }}/notebooks/py_versions/Data_Pipeline.py
-
-      - name: Saving changes to repo
-        uses: stefanzweifel/git-auto-commit-action@v4
+          
+      - name: commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff-index --quiet HEAD || (git commit -a -m "Updated data" --allow-empty)
+          
+      - name: push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main 
