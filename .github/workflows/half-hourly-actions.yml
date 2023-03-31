@@ -2,16 +2,16 @@ name: run Data_Pipeline.py
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
+    - cron: '*/3 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    permissions:
-      # Give the default GITHUB_TOKEN write permission to commit and push the
-      # added or changed files to the repository.
-      contents: write
+    # permissions:
+    #   # Give the default GITHUB_TOKEN write permission to commit and push the
+    #   # added or changed files to the repository.
+    #   contents: write
 
     steps:
 
