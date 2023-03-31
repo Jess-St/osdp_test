@@ -11,7 +11,6 @@ All BMRS data is queried using the Elexon Data Portal package (https://github.co
 In order to provide location data alongside the generation data, locations of generators have been mapped using the data available from the "Power Station Dictionary" GitHub repository (https://github.com/OSUKED/Power-Station-Dictionary).
 <br>
 <br>
-<iframe id="igraph" scrolling="no" style="border:none;" seamless="seamless" src="https://jess-st.github.io/osdp_test/" height="525" width="100%"></iframe>
 
 ## Limitations to be aware of
 
