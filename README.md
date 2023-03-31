@@ -12,6 +12,8 @@ In order to provide location data alongside the generation data, locations of ge
 <br>
 <br>
 
+<iframe id="igraph" scrolling="no" style="border:none;" seamless="seamless" src="https://jess-st.github.io/osdp_test/" height="525" width="100%"></iframe>
+
 ## Limitations to be aware of
 
 By design, this data pipeline will only capture data about electricity generators which are sending data to the BMRMs, namely larger generators which export into the UK's transmission network. This means that a lot of smaller generators (e.g. small onshore wind farms) and embedded generation (e.g. rooftop solar) will not be included in this dataset. Likewise, electricity flow via interconnectors has not been included in this pipeline.
