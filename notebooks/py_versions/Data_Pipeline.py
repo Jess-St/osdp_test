@@ -70,7 +70,9 @@ df_PHYBMDATA = plfns.setup_update_PHYBM_data(
 # The actions to turn the BM data into long format and resolve it to minutely level will only be performed on the latest BM data to reduce the processing time and compute required. The rest of the BM data will be read from the previous version of the output dataset, i.e. anything between the BM_Start_date and 90min from the end date of the previous version of the "Generation_Combined.csv" output.
 
 # %%
-df_generation, df_fpn, df_mel, df_boal = plfns.filter_and_rename_physical_Data(location_BMRS_Final, df_B1610, df_PHYBMDATA)
+df_generation, df_fpn, df_mel, df_boal = plfns.filter_and_rename_physical_Data(
+    location_BMRS_Final, df_B1610, df_PHYBMDATA
+)
 
 # %% [markdown]
 # The half-hourly or sub-half-hourly data is resampled to minutely resolution so that actions that happen at different times during each half-hour period can be joined together.
