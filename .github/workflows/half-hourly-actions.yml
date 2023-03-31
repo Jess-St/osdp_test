@@ -2,7 +2,7 @@ name: run Data_Pipeline.py
 
 on:
   schedule:
-    - cron: '*/3 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
+    - cron: '*/30 * * * *' # every 30 mins (https://crontab.guru/every-30-minutes)
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
           git diff-index --quiet HEAD || (git commit -a -m "updated data" --allow-empty)
           
       - name: push changes
-        uses: ad-m/github-push-action@v0.6.0
+        uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
