@@ -24,6 +24,7 @@ jobs:
           
       - name: execute py script # run Data_Pipeline.py
         env:
+          BMRS_API_KEY: ${{ secrets.BMRS_API_KEY }}
           OSDP: ${{ github.workspace }}
         run: python ${{ github.workspace }}/notebooks/py_versions/PSD_dataprep.py
 
