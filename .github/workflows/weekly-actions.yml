@@ -2,7 +2,7 @@ name: run PSD_dataprep.py
 
 on:
   schedule:
-    - cron: '0 12 * * TUE' # every Monday (https://crontab.guru/every-monday)
+    - cron: '30 14 * * TUE' # every Monday (https://crontab.guru/every-monday)
 
 jobs:
   build:
