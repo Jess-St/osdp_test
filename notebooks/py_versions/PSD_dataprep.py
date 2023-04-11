@@ -55,7 +55,7 @@ df_fuel_types_psd = pd.read_csv(fuel_types_psd)
 resp = requests.get(fuel_types_elexon)
 with open(os.path.join(location, "BMUFuelType.xls"), "wb") as output:
     output.write(resp.content)
-df_fuel_types_elexon = pd.read_excel("../data/BMUFuelType.xls")
+df_fuel_types_elexon = pd.read_excel(os.path.join(location, "BMUFuelType.xls"))
 
 # %%
 # Split the IDs dataset so that each of the Settlement BMU IDs becomes its own row
