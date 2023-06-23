@@ -22,14 +22,14 @@ import pandas as pd
 import os
 import numpy as np
 from datetime import timedelta
-import pipeline_fns as plfns
+import py_versions.pipeline_fns as plfns
 import warnings
 
 warnings.filterwarnings(action="ignore", category=UserWarning)
 
 # %%
 osdp_folder = os.environ.get("OSDP")
-# osdp_folder
+osdp_folder
 
 # %%
 # Specify which folder contains your local directory
@@ -111,6 +111,17 @@ df_fpn_mel_boal["quantity"] = np.where(
 )  # If the MEL is lower than the BOAL or FPN value, cap the generation at the level of the MEL.
 
 # %%
+# Calculate the curtailment amount
+df_fpn_mel_boal["quantity_fpn_diff"] = np.where(
+    (df_fpn_mel_boal["Level_boal"] >= 0) & (df_fpn_mel_boal["Level_mel"] >= df_fpn_mel_boal["Level_boal"]),
+    df_fpn_mel_boal["Level_fpn"] - df_fpn_mel_boal["Level_boal"],
+    np.NaN,
+)
+df_fpn_mel_boal["quantity_curtailment"] = np.where(
+    df_fpn_mel_boal["quantity_fpn_diff"] >= 0, df_fpn_mel_boal["quantity_fpn_diff"], 0
+)
+
+# %%
 # Aggregate back up to the settlement period (SP) level and calculate the mean generation during each SP
 df_fpn_mel_boal["settlementPeriod_fpn"] = df_fpn_mel_boal["settlementPeriod_fpn"].astype(str)
 df_fpn_mel_boal_agg = (
@@ -120,7 +131,15 @@ df_fpn_mel_boal_agg = (
 )
 df_fpn_mel_boal_agg = df_fpn_mel_boal_agg.rename(columns={"local_datetime_fpn": "local_datetime"})
 df_fpn_mel_boal_agg = df_fpn_mel_boal_agg[
-    ["local_datetime", "settlementDate", "settlementPeriod", "bmUnitID", "quantity"]
+    [
+        "local_datetime",
+        "settlementDate",
+        "settlementPeriod",
+        "bmUnitID",
+        "quantity",
+        "quantity_curtailment",
+        "quantity_fpn_diff",
+    ]
 ]
 
 # %%
@@ -147,6 +166,8 @@ df_generation = df_generation[
         "settlementPeriod",
         "bmUnitID",
         "quantity",
+        "quantity_curtailment",
+        "quantity_fpn_diff",
         "dictionary_id",
         "common_name",
         "longitude",
