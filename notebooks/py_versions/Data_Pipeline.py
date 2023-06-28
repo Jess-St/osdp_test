@@ -29,7 +29,7 @@ warnings.filterwarnings(action="ignore", category=UserWarning)
 
 # %%
 osdp_folder = os.environ.get("OSDP")
-osdp_folder
+# osdp_folder
 
 # %%
 # Specify which folder contains your local directory
