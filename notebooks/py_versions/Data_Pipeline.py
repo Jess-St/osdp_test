@@ -22,7 +22,7 @@ import pandas as pd
 import os
 import numpy as np
 from datetime import timedelta
-import py_versions.pipeline_fns as plfns
+import pipeline_fns as plfns
 import warnings
 
 warnings.filterwarnings(action="ignore", category=UserWarning)
